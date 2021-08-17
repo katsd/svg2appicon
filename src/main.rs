@@ -137,7 +137,7 @@ fn generate_icon_files(assets_path: &Path, tree: &Tree, icons: &Vec<Icon>) {
     for icon in icons {
         let size = icon.size * (icon.scale as f64);
         let size = size as u32;
-        let path = assets_path.join(&icon.filename);
+        let path = assets_path.join(&icon.get_filename());
         let path: &str = path.to_str().unwrap_or("");
         save_png(&tree, size, path);
     }
