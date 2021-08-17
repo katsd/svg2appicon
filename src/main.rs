@@ -37,7 +37,7 @@ fn main() {
 
     let assets_path_str: &str = &config.assets_path;
     let assets_path = Path::new(assets_path_str);
-    
+
     for icons in &icons_set {
         generate_icon_files(assets_path, &tree, &icons);
     }

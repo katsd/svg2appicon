@@ -18,7 +18,7 @@ pub static IOS_ICONS: Lazy<Vec<Icon>> = Lazy::new(|| vec![
     Icon::ios("ipad", 1, 76.0),
     Icon::ios("ipad", 2, 76.0),
     Icon::ios("ipad", 2, 83.5),
-    Icon::ios("Ios-marketing", 1, 1024.0),
+    Icon::ios("ios-marketing", 1, 1024.0),
 ]);
 
 pub static MAC_ICONS: Lazy<Vec<Icon>> = Lazy::new(|| vec![
