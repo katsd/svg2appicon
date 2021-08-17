@@ -18,7 +18,7 @@ pub static IOS_ICONS: Lazy<Vec<Icon>> = Lazy::new(|| vec![
     Icon::ios("ipad", 1, 76.0),
     Icon::ios("ipad", 2, 76.0),
     Icon::ios("ipad", 2, 83.5),
-    Icon::ios("ios-marketing", 1, 1024.0),
+    Icon::ios("Ios-marketing", 1, 1024.0),
 ]);
 
 pub static MAC_ICONS: Lazy<Vec<Icon>> = Lazy::new(|| vec![
@@ -49,17 +49,17 @@ pub static WATCH_ICONS: Lazy<Vec<Icon>> = Lazy::new(|| vec![
 ]);
 
 enum OS {
-    ios,
-    macos,
-    watchos,
+    Ios,
+    Macos,
+    Watchos,
 }
 
 impl OS {
     fn get_str(&self) -> String {
         match self {
-            OS::ios => "iOS".to_string(),
-            OS::macos => "macOS".to_string(),
-            OS::watchos => "watchOS".to_string(),
+            OS::Ios => "iOS".to_string(),
+            OS::Macos => "macOS".to_string(),
+            OS::Watchos => "watchOS".to_string(),
         }
     }
 }
@@ -93,15 +93,15 @@ pub struct Icon {
 
 impl Icon {
     pub fn ios(idiom: &str, scale: u32, size: f64) -> Self {
-        Icon { os: OS::ios, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
+        Icon { os: OS::Ios, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
     }
 
     pub fn mac(idiom: &str, scale: u32, size: f64) -> Self {
-        Icon { os: OS::macos, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
+        Icon { os: OS::Macos, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
     }
 
     pub fn watch(idiom: &str, role: Option<&str>, scale: u32, size: f64, subtype: Option<Subtype>) -> Self {
-        Icon { os: OS::watchos, idiom: idiom.to_string(), role: role.map(|v| v.to_string()), scale, size, subtype }
+        Icon { os: OS::Watchos, idiom: idiom.to_string(), role: role.map(|v| v.to_string()), scale, size, subtype }
     }
 
     pub fn to_json(&self) -> String {
