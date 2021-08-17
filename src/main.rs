@@ -1,7 +1,7 @@
 use usvg::{SystemFontDB, Tree};
 use std::path::Path;
 use std::fs::{self, File};
-use std::io::{self, Error, Write};
+use std::io::Write;
 use clap::{Arg, App};
 
 mod icon;
@@ -37,6 +37,7 @@ fn main() {
 
     let assets_path_str: &str = &config.assets_path;
     let assets_path = Path::new(assets_path_str);
+    
     for icons in &icons_set {
         generate_icon_files(assets_path, &tree, &icons);
     }
@@ -84,17 +85,8 @@ fn get_config() -> Config {
 }
 
 fn get_json_str(icons_set: &Vec<&Vec<Icon>>) -> String {
-    format!(
-        "{{
-  \"images\" : [{}
-  ],
-  \"info\" : {{
-    \"author\" : \"xcode\",
-    \"version\" : 1
-  }}
-}}
-"
-        , icons_set
+    let icons_json_str =
+        icons_set
             .iter()
             .map(|icons|
                 icons
@@ -104,8 +96,18 @@ fn get_json_str(icons_set: &Vec<&Vec<Icon>>) -> String {
                     .join(",\n")
             )
             .collect::<Vec<String>>()
-            .join(",\n")
-    )
+            .join(",\n");
+
+    format!(
+        "{{
+  \"images\" : [{}
+  ],
+  \"info\" : {{
+    \"author\" : \"xcode\",
+    \"version\" : 1
+  }}
+}}
+", icons_json_str)
 }
 
 fn save_json(assets_path: &Path, json_str: &String) {

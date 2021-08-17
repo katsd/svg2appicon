@@ -64,7 +64,7 @@ impl OS {
     }
 }
 
-pub enum Subtype {
+enum Subtype {
     _38 = 38,
     _40 = 40,
     _42 = 42,
@@ -72,7 +72,7 @@ pub enum Subtype {
 }
 
 impl Subtype {
-    pub fn to_string(&self) -> &str {
+    fn to_string(&self) -> &str {
         match self {
             Subtype::_38 => "38mm",
             Subtype::_40 => "40mm",
@@ -84,23 +84,23 @@ impl Subtype {
 
 pub struct Icon {
     os: OS,
-    pub idiom: String,
-    pub role: Option<String>,
+    idiom: String,
+    role: Option<String>,
     pub scale: u32,
     pub size: f64,
-    pub subtype: Option<Subtype>,
+    subtype: Option<Subtype>,
 }
 
 impl Icon {
-    pub fn ios(idiom: &str, scale: u32, size: f64) -> Self {
+    fn ios(idiom: &str, scale: u32, size: f64) -> Self {
         Icon { os: OS::Ios, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
     }
 
-    pub fn mac(idiom: &str, scale: u32, size: f64) -> Self {
+    fn mac(idiom: &str, scale: u32, size: f64) -> Self {
         Icon { os: OS::Macos, idiom: idiom.to_string(), role: None, scale, size, subtype: None }
     }
 
-    pub fn watch(idiom: &str, role: Option<&str>, scale: u32, size: f64, subtype: Option<Subtype>) -> Self {
+    fn watch(idiom: &str, role: Option<&str>, scale: u32, size: f64, subtype: Option<Subtype>) -> Self {
         Icon { os: OS::Watchos, idiom: idiom.to_string(), role: role.map(|v| v.to_string()), scale, size, subtype }
     }
 
