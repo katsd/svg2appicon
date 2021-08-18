@@ -29,17 +29,7 @@ fn main() {
     fs::create_dir(&config.assets_path)
         .expect(&format!("Failed to create {}", config.assets_path));
 
-    let mut icons_set: Vec<&Vec<Icon>> = vec![];
-    if config.ios {
-        icons_set.push(&icon::IOS_ICONS);
-    }
-    if config.mac {
-        icons_set.push(&icon::MAC_ICONS);
-    }
-    if config.watch {
-        icons_set.push(&icon::WATCH_ICONS);
-    }
-    let icons_set = icons_set;
+    let icons_set = get_icons_set(&config);
 
     let assets_path_str: &str = &config.assets_path;
     let assets_path = Path::new(assets_path_str);
@@ -95,6 +85,21 @@ fn get_config() -> Config {
     let watch = matches.is_present("watch");
 
     Config { svg_path, assets_path, ios, mac, watch }
+}
+
+fn get_icons_set(config: &Config) -> Vec<&Vec<Icon>> {
+    let mut icons_set: Vec<&Vec<Icon>> = vec![];
+    if config.ios {
+        icons_set.push(&icon::IOS_ICONS);
+    }
+    if config.mac {
+        icons_set.push(&icon::MAC_ICONS);
+    }
+    if config.watch {
+        icons_set.push(&icon::WATCH_ICONS);
+    }
+
+    icons_set
 }
 
 fn get_json_str(icons_set: &Vec<&Vec<Icon>>) -> String {
