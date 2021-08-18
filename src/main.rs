@@ -1,11 +1,11 @@
+mod icon;
+
 use usvg::{SystemFontDB, Tree};
 use std::path::Path;
 use std::fs::{self, File};
 use std::io::Write;
 use clap::{Arg, App};
-
-mod icon;
-
+use anyhow::{Context, Result};
 use icon::Icon;
 
 struct Config {
@@ -19,9 +19,15 @@ struct Config {
 fn main() {
     let config = get_config();
 
-    let tree = get_tree(&config.svg_path);
-    fs::remove_dir_all(&config.assets_path);
-    fs::create_dir(&config.assets_path);
+    let tree = match get_tree(&config.svg_path) {
+        Ok(tree) => tree,
+        Err(e) => panic!("{}", e)
+    };
+
+    fs::remove_dir_all(&config.assets_path)
+        .expect(&format!("Failed to remove {}", config.assets_path));
+    fs::create_dir(&config.assets_path)
+        .expect(&format!("Failed to create {}", config.assets_path));
 
     let mut icons_set: Vec<&Vec<Icon>> = vec![];
     if config.ios {
@@ -39,11 +45,18 @@ fn main() {
     let assets_path = Path::new(assets_path_str);
 
     for icons in &icons_set {
-        generate_icon_files(assets_path, &tree, &icons);
+        match generate_icon_files(assets_path, &tree, &icons) {
+            Ok(()) => (),
+            Err(e) => panic!("{}", e)
+        };
     }
 
     let json_str = get_json_str(&icons_set);
-    save_json(&assets_path, &json_str);
+
+    match save_json(&assets_path, &json_str) {
+        Ok(()) => (),
+        Err(e) => panic!("{}", e)
+    };
 }
 
 fn get_config() -> Config {
@@ -110,44 +123,52 @@ fn get_json_str(icons_set: &Vec<&Vec<Icon>>) -> String {
 ", icons_json_str)
 }
 
-fn save_json(assets_path: &Path, json_str: &String) {
+fn save_json(assets_path: &Path, json_str: &String) -> Result<()> {
     let path = assets_path.join("Contents.json");
 
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("couldn't create file"),
-        Ok(file) => file
-    };
+    let mut file = File::create(&path).with_context(|| "Failed to create Contents.json")?;
 
-    match file.write_all(json_str.as_bytes()) {
-        Err(why) => panic!("couldn't write to file"),
-        Ok(_) => println!("success")
-    }
+    file.write_all(json_str.as_bytes()).with_context(|| "Failed to write to Contents.json")
 }
 
-fn get_tree<P: AsRef<Path>>(svg_path: P) -> Tree {
+fn get_tree<P: AsRef<Path>>(svg_path: P) -> Result<Tree> {
     let mut opt = usvg::Options::default();
     opt.resources_dir = std::fs::canonicalize(&svg_path).ok().and_then(|p| p.parent().map(|p| p.to_path_buf()));
     opt.fontdb.load_system_fonts();
     opt.fontdb.set_generic_families();
 
-    let svg_data = std::fs::read(&svg_path).unwrap();
+    let svg_data = std::fs::read(&svg_path)?;
 
-    usvg::Tree::from_data(&svg_data, &opt).unwrap()
+    usvg::Tree::from_data(&svg_data, &opt)
+        .with_context(|| "Failed to get svg tree")
 }
 
-fn generate_icon_files(assets_path: &Path, tree: &Tree, icons: &Vec<Icon>) {
+fn generate_icon_files(assets_path: &Path, tree: &Tree, icons: &Vec<Icon>) -> Result<()> {
     for icon in icons {
         let size = icon.size * (icon.scale as f64);
         let size = size as u32;
         let path = assets_path.join(&icon.get_filename());
-        let path: &str = path.to_str().unwrap_or("");
-        save_png(&tree, size, path);
+        let path: &str = path.to_str().with_context(|| "Failed to generate icon file path")?;
+        save_png(&tree, size, path)?;
     }
+
+    Ok(())
 }
 
-fn save_png<P: AsRef<Path>>(tree: &Tree, size: u32, path: P) {
-    let pixmap_size = usvg::Size::new(size as f64, size as f64).unwrap().to_screen_size();
-    let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
-    resvg::render(&tree, usvg::FitTo::Size(size, size), pixmap.as_mut()).unwrap();
-    pixmap.save_png(&path);
+fn save_png<P: AsRef<Path>>(tree: &Tree, size: u32, path: P) -> Result<()> {
+    let pixmap_size =
+        usvg::Size::new(size as f64, size as f64)
+            .with_context(|| "Failed to generate icon file")?
+            .to_screen_size();
+
+    let mut pixmap =
+        tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
+            .with_context(|| "Failed to genarate icon file")?;
+
+    resvg::render(&tree, usvg::FitTo::Size(size, size), pixmap.as_mut())
+        .with_context(|| "Failed to render svg image")?;
+
+    pixmap.save_png(&path)?;
+
+    Ok(())
 }
