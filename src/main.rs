@@ -12,39 +12,32 @@ fn get_config() -> Config {
         .version("0.1.0")
         .author("Katsu Matsuda")
         .about("Convert svg to icons for iOS, macOS, and watchOS")
-        .arg(Arg::with_name("SVG_PATH")
-            .help("Path to svg image")
-            .required(true)
-            .index(1)
-        )
         .arg(Arg::with_name("ASSETS_PATH")
             .help("Path to appiconset")
             .required(true)
-            .index(2)
+            .index(1)
         )
-        .arg(Arg::with_name("ios")
-            .help("generate icon for iOS")
+        .arg(Arg::with_name("SVG_IOS")
+            .help("Path to svg image for iOS")
             .long("ios")
+            .value_name("FILE")
         )
-        .arg(Arg::with_name("mac")
-            .help("generate icon for macOS")
+        .arg(Arg::with_name("SVG_MAC")
+            .help("Path to svg image for macOS")
             .long("mac")
+            .value_name("FILE")
         )
-        .arg(Arg::with_name("watch")
-            .help("generate icon for watchOS")
+        .arg(Arg::with_name("SVG_WATCH")
+            .help("Path to svg image for watchOS")
             .long("watch")
+            .value_name("FILE")
         )
         .get_matches();
 
-    let svg_path = Path::new(&matches.value_of("SVG_PATH").unwrap().to_string()).to_owned();
     let assets_path = matches.value_of("ASSETS_PATH").unwrap().to_string();
-    let mut ios = matches.is_present("ios");
-    let mac = matches.is_present("mac");
-    let watch = matches.is_present("watch");
+    let svg_ios = matches.value_of("SVG_IOS").map(|v| SVG::File(Path::new(v).to_owned()));
+    let svg_mac = matches.value_of("SVG_MAC").map(|v| SVG::File(Path::new(v).to_owned()));
+    let svg_watch = matches.value_of("SVG_WATCH").map(|v| SVG::File(Path::new(v).to_owned()));
 
-    if !ios && !mac && !watch {
-        ios = true;
-    }
-
-    Config { svg: SVG::File(svg_path), assets_path, ios, mac, watch }
+    Config { assets_path, svg_ios, svg_mac, svg_watch }
 }

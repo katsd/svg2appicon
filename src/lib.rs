@@ -6,6 +6,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use anyhow::{Context, Result};
 use icon::Icon;
+use crate::icon::{IOS_ICONS, MAC_ICONS, WATCH_ICONS};
 
 pub enum SVG {
     Data(Vec<u8>),
@@ -13,27 +14,13 @@ pub enum SVG {
 }
 
 pub struct Config {
-    pub svg: SVG,
     pub assets_path: String,
-    pub ios: bool,
-    pub mac: bool,
-    pub watch: bool,
+    pub svg_ios: Option<SVG>,
+    pub svg_mac: Option<SVG>,
+    pub svg_watch: Option<SVG>,
 }
 
 pub fn generate_icons(config: &Config) {
-    let tree = match &config.svg {
-        SVG::Data(data) =>
-            match get_tree_from_data(data) {
-                Ok(tree) => tree,
-                Err(e) => panic!("{}", e)
-            }
-        SVG::File(p) =>
-            match get_tree(p) {
-                Ok(tree) => tree,
-                Err(e) => panic!("{}", e)
-            }
-    };
-
     if Path::new(&config.assets_path).exists() {
         fs::remove_dir_all(&config.assets_path)
             .expect(&format!("Failed to remove {}", config.assets_path));
@@ -41,18 +28,32 @@ pub fn generate_icons(config: &Config) {
     fs::create_dir(&config.assets_path)
         .expect(&format!("Failed to create {}", config.assets_path));
 
-    let icons_set = get_icons_set(&config);
 
     let assets_path_str: &str = &config.assets_path;
     let assets_path = Path::new(assets_path_str);
 
-    for icons in &icons_set {
-        match generate_icon_files(assets_path, &tree, &icons) {
+    &config.svg_ios.as_ref().map(|svg|
+        match generate_icon_files(assets_path, &svg, &IOS_ICONS) {
             Ok(()) => (),
             Err(e) => panic!("{}", e)
-        };
-    }
+        }
+    );
 
+    &config.svg_mac.as_ref().map(|svg|
+        match generate_icon_files(assets_path, &svg, &MAC_ICONS) {
+            Ok(()) => (),
+            Err(e) => panic!("{}", e)
+        }
+    );
+
+    &config.svg_watch.as_ref().map(|svg|
+        match generate_icon_files(assets_path, &svg, &WATCH_ICONS) {
+            Ok(()) => (),
+            Err(e) => panic!("{}", e)
+        }
+    );
+
+    let icons_set = get_icons_set(&config);
     let json_str = get_json_str(&icons_set);
 
     match save_json(&assets_path, &json_str) {
@@ -64,13 +65,13 @@ pub fn generate_icons(config: &Config) {
 
 fn get_icons_set(config: &Config) -> Vec<&Vec<Icon>> {
     let mut icons_set: Vec<&Vec<Icon>> = vec![];
-    if config.ios {
+    if let Some(_) = config.svg_ios {
         icons_set.push(&icon::IOS_ICONS);
     }
-    if config.mac {
+    if let Some(_) = config.svg_mac {
         icons_set.push(&icon::MAC_ICONS);
     }
-    if config.watch {
+    if let Some(_) = config.svg_watch {
         icons_set.push(&icon::WATCH_ICONS);
     }
 
@@ -112,7 +113,16 @@ fn save_json(assets_path: &Path, json_str: &String) -> Result<()> {
     file.write_all(json_str.as_bytes()).with_context(|| "Failed to write to Contents.json")
 }
 
-fn get_tree<P: AsRef<Path>>(svg_path: P) -> Result<Tree> {
+fn get_tree(svg: &SVG) -> Result<Tree> {
+    match svg {
+        SVG::Data(data) =>
+            get_tree_from_data(data),
+        SVG::File(p) =>
+            get_tree_from_file(p)
+    }
+}
+
+fn get_tree_from_file<P: AsRef<Path>>(svg_path: P) -> Result<Tree> {
     let mut opt = get_options();
     opt.resources_dir = std::fs::canonicalize(&svg_path).ok().and_then(|p| p.parent().map(|p| p.to_path_buf()));
 
@@ -135,7 +145,9 @@ fn get_options() -> usvg::Options {
     opt
 }
 
-fn generate_icon_files(assets_path: &Path, tree: &Tree, icons: &Vec<Icon>) -> Result<()> {
+fn generate_icon_files(assets_path: &Path, svg: &SVG, icons: &Vec<Icon>) -> Result<()> {
+    let tree = get_tree(&svg).with_context(|| "Failed to get tree")?;
+
     for icon in icons {
         let size = icon.size * (icon.scale as f64);
         let size = size as u32;
