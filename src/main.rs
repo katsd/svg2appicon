@@ -80,9 +80,13 @@ fn get_config() -> Config {
 
     let svg_path = matches.value_of("SVG_PATH").unwrap().to_string();
     let assets_path = matches.value_of("ASSETS_PATH").unwrap().to_string();
-    let ios = matches.is_present("ios");
+    let mut ios = matches.is_present("ios");
     let mac = matches.is_present("mac");
     let watch = matches.is_present("watch");
+
+    if !ios && !mac && !watch {
+        ios = true;
+    }
 
     Config { svg_path, assets_path, ios, mac, watch }
 }
@@ -118,7 +122,8 @@ fn get_json_str(icons_set: &Vec<&Vec<Icon>>) -> String {
 
     format!(
         "{{
-  \"images\" : [{}
+  \"images\" : [
+{}
   ],
   \"info\" : {{
     \"author\" : \"xcode\",
@@ -139,8 +144,10 @@ fn save_json(assets_path: &Path, json_str: &String) -> Result<()> {
 fn get_tree<P: AsRef<Path>>(svg_path: P) -> Result<Tree> {
     let mut opt = usvg::Options::default();
     opt.resources_dir = std::fs::canonicalize(&svg_path).ok().and_then(|p| p.parent().map(|p| p.to_path_buf()));
+    //opt.fontdb.load_font_file("/Users/katsu/Projects/Rust/svg2appicon/assets/SourceSansPro-Regular.ttf");
+
     opt.fontdb.load_system_fonts();
-    opt.fontdb.set_generic_families();
+    opt.font_family = "Helvetica".to_owned();
 
     let svg_data = std::fs::read(&svg_path)?;
 
