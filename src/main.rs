@@ -8,7 +8,7 @@ fn main() {
 }
 
 fn get_config() -> Config {
-    let matches = App::new("svg2xc")
+    let matches = App::new("svg2appicon")
         .version("0.1.0")
         .author("Katsu Matsuda")
         .about("Convert svg to icons for iOS, macOS, and watchOS")
