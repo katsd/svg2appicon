@@ -1,6 +1,6 @@
 pub mod icon;
 
-use usvg::Tree;
+use usvg::{Tree, SystemFontDB};
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::Write;
@@ -20,38 +20,28 @@ pub struct Config {
     pub svg_watch: Option<SVG>,
 }
 
-pub fn generate_icons(config: &Config) {
+pub fn generate_icons(config: &Config) -> Result<()> {
     if Path::new(&config.assets_path).exists() {
         fs::remove_dir_all(&config.assets_path)
-            .expect(&format!("Failed to remove {}", config.assets_path));
+            .with_context(|| format!("Failed to remove {}", config.assets_path))?;
     }
     fs::create_dir(&config.assets_path)
-        .expect(&format!("Failed to create {}", config.assets_path));
-
+        .with_context(|| format!("Failed to create {}", config.assets_path))?;
 
     let assets_path_str: &str = &config.assets_path;
     let assets_path = Path::new(assets_path_str);
 
-    &config.svg_ios.as_ref().map(|svg|
-        match generate_icon_files(assets_path, &svg, &IOS_ICONS) {
-            Ok(()) => (),
-            Err(e) => panic!("{}", e)
-        }
-    );
+    if let Some(svg) = &config.svg_ios {
+        generate_icon_files(assets_path, svg, &IOS_ICONS)?;
+    }
 
-    &config.svg_mac.as_ref().map(|svg|
-        match generate_icon_files(assets_path, &svg, &MAC_ICONS) {
-            Ok(()) => (),
-            Err(e) => panic!("{}", e)
-        }
-    );
+    if let Some(svg) = &config.svg_mac {
+        generate_icon_files(assets_path, svg, &MAC_ICONS)?;
+    }
 
-    &config.svg_watch.as_ref().map(|svg|
-        match generate_icon_files(assets_path, &svg, &WATCH_ICONS) {
-            Ok(()) => (),
-            Err(e) => panic!("{}", e)
-        }
-    );
+    if let Some(svg) = &config.svg_watch {
+        generate_icon_files(assets_path, svg, &WATCH_ICONS)?;
+    }
 
     let icons_set = get_icons_set(&config);
     let json_str = get_json_str(&icons_set);
@@ -60,8 +50,9 @@ pub fn generate_icons(config: &Config) {
         Ok(()) => (),
         Err(e) => panic!("{}", e)
     };
-}
 
+    Ok(())
+}
 
 fn get_icons_set(config: &Config) -> Vec<&Vec<Icon>> {
     let mut icons_set: Vec<&Vec<Icon>> = vec![];
@@ -129,24 +120,24 @@ fn get_tree_from_file<P: AsRef<Path>>(svg_path: P) -> Result<Tree> {
     let svg_data = std::fs::read(&svg_path)?;
 
     usvg::Tree::from_data(&svg_data, &opt)
-        .with_context(|| "Failed to get svg tree")
+        .with_context(|| "Failed to process the svg file")
 }
 
 fn get_tree_from_data(svg_data: &Vec<u8>) -> Result<Tree> {
     let opt = get_options();
     usvg::Tree::from_data(svg_data, &opt)
-        .with_context(|| "Failed to get svg tree")
+        .with_context(|| "Failed to process the svg file")
 }
 
 fn get_options() -> usvg::Options {
     let mut opt = usvg::Options::default();
     opt.fontdb.load_system_fonts();
-    opt.font_family = "Helvetica".to_string();
+    opt.fontdb.set_generic_families();
     opt
 }
 
 fn generate_icon_files(assets_path: &Path, svg: &SVG, icons: &Vec<Icon>) -> Result<()> {
-    let tree = get_tree(&svg).with_context(|| "Failed to get tree")?;
+    let tree = get_tree(&svg)?;
 
     for icon in icons {
         let size = icon.size * (icon.scale as f64);
