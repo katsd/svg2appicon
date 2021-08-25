@@ -3,8 +3,8 @@ name = "svg2appicon"
 version = "0.1.0"
 authors = ["Katsu Matsuda <kats.mtd@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Convert svg to icons for iOS, macOS, and watchOS"
+license = "MIT"
 
 [dependencies]
 resvg = "0.15.0"
