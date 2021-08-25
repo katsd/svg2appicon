@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn get_config() -> Result<Config> {
-    let assets_path_key = "ASSETS_PATH";
+    let assets_path_key = "APPICONSET";
     let svg_ios_key = "SVG_IOS";
     let svg_mac_key = "SVG_MAC";
     let svg_watch_key = "SVG_WATCH";
@@ -30,24 +30,24 @@ fn get_config() -> Result<Config> {
         .author("Katsu Matsuda")
         .about("Convert svg to icons for iOS, macOS, and watchOS")
         .arg(Arg::with_name(assets_path_key)
-            .help("Path to appiconset")
+            .help("Path to .appiconset (e.g. /path/to/Assets.xcassets/AppIcon.appiconset)")
             .required(true)
             .index(1)
         )
         .arg(Arg::with_name(svg_ios_key)
-            .help("Path to svg image for iOS")
+            .help("Generate icons for iOS")
             .long("ios")
-            .value_name("FILE")
+            .value_name("SVG_FILE")
         )
         .arg(Arg::with_name(svg_mac_key)
-            .help("Path to svg image for macOS")
+            .help("Generate icons for macOS")
             .long("mac")
-            .value_name("FILE")
+            .value_name("SVG_FILE")
         )
         .arg(Arg::with_name(svg_watch_key)
-            .help("Path to svg image for watchOS")
+            .help("Generate icons for watchOS")
             .long("watch")
-            .value_name("FILE")
+            .value_name("SVG_FILE")
         )
         .get_matches();
 
