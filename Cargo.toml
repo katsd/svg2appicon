@@ -1,6 +1,6 @@
 [package]
 name = "svg2appicon"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Katsu Matsuda <kats.mtd@gmail.com>"]
 edition = "2018"
 description = "Convert svg to icons for iOS, macOS, and watchOS"

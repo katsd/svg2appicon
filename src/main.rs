@@ -26,7 +26,7 @@ fn get_config() -> Result<Config> {
     let svg_watch_key = "SVG_WATCH";
 
     let matches = App::new("svg2appicon")
-        .version("0.1.0")
+        .version("0.1.2")
         .author("Katsu Matsuda")
         .about("Convert svg to icons for iOS, macOS, and watchOS")
         .arg(Arg::with_name(assets_path_key)
