@@ -4,9 +4,10 @@ use usvg::{Tree, SystemFontDB};
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::Write;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use icon::Icon;
 use crate::icon::{IOS_ICONS, MAC_ICONS, WATCH_ICONS};
+use std::ffi::OsStr;
 
 pub enum SVG {
     Data(Vec<u8>),
@@ -21,6 +22,12 @@ pub struct Config {
 }
 
 pub fn generate_icons(config: &Config) -> Result<()> {
+    //let a = Path::new(&config.assets_path).extension();
+
+    if Path::new(&config.assets_path).extension() != Some(OsStr::new("appiconset")) {
+        bail!("Please specify the path to .appiconset")
+    }
+
     if Path::new(&config.assets_path).exists() {
         fs::remove_dir_all(&config.assets_path)
             .with_context(|| format!("Failed to remove {}", config.assets_path))?;
@@ -46,10 +53,7 @@ pub fn generate_icons(config: &Config) -> Result<()> {
     let icons_set = get_icons_set(&config);
     let json_str = get_json_str(&icons_set);
 
-    match save_json(&assets_path, &json_str) {
-        Ok(()) => (),
-        Err(e) => panic!("{}", e)
-    };
+    save_json(&assets_path, &json_str)?;
 
     Ok(())
 }
